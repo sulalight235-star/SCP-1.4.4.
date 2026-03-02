@@ -143,13 +143,14 @@ const FormField = ({ label, required, children, error, className = "" }: { label
   </div>
 );
 
-const Input = ({ placeholder, value, readOnly, className = "" }: { placeholder?: string; value?: string; readOnly?: boolean; className?: string }) => (
+const Input = ({ placeholder, value, readOnly, disabled, className = "" }: { placeholder?: string; value?: string; readOnly?: boolean; disabled?: boolean; className?: string }) => (
   <input
     type="text"
     placeholder={placeholder}
     value={value}
     readOnly={readOnly}
-    className={`w-full h-8 px-3 text-sm border border-slate-200 rounded bg-white focus:outline-none focus:border-blue-400 placeholder:text-slate-300 disabled:bg-slate-50 ${className}`}
+    disabled={disabled}
+    className={`w-full h-8 px-3 text-sm border border-slate-200 rounded bg-white focus:outline-none focus:border-blue-400 placeholder:text-slate-400 disabled:bg-slate-100 disabled:cursor-not-allowed ${className}`}
   />
 );
 
@@ -257,12 +258,21 @@ export default function App() {
 
   // --- Form State ---
   const [form, setForm] = useState({
+    brandCode: '',
+    pushPrice: '25596.00',
     numeric: '123',
     text: '123',
     amount: '123',
     date: '',
     selection: [] as string[]
   });
+
+  const platformFeeRate = 0.035; // 3.5%
+  const agreementPrice = form.pushPrice && !isNaN(Number(form.pushPrice)) 
+    ? (Number(form.pushPrice) / (1 + platformFeeRate)).toFixed(2)
+    : '';
+
+  const brandCategory = form.brandCode ? '自主品牌' : '';
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -437,7 +447,11 @@ export default function App() {
                     <Input placeholder="商城价" />
                   </FormField>
                   <FormField label="品牌编码">
-                    <Input placeholder="品牌编码" />
+                    <ValidatedInput 
+                      value={form.brandCode} 
+                      onChange={(v) => handleFieldChange('brandCode', v)}
+                      placeholder="品牌编码" 
+                    />
                   </FormField>
                   <FormField label="商品唯一标识">
                     <Input placeholder="商品唯一标识" />
@@ -447,7 +461,11 @@ export default function App() {
                 {/* Column 3 */}
                 <div>
                   <FormField label="推送价">
-                    <Input value="25596.00" />
+                    <ValidatedInput 
+                      value={form.pushPrice} 
+                      onChange={(v) => handleFieldChange('pushPrice', v)}
+                      placeholder="请输入推送价"
+                    />
                   </FormField>
                   <FormField label="商品寻源编号">
                     <Input placeholder="商品寻源编号" />
@@ -506,6 +524,22 @@ export default function App() {
                       onChange={(v) => handleFieldChange('selection', v)}
                       error={errors.selection}
                       placeholder="请选择枚举值"
+                    />
+                  </FormField>
+                  <FormField label="平台协议价" className="lg:col-span-2">
+                    <Input 
+                      value={agreementPrice} 
+                      disabled 
+                      placeholder="平台协议价=推送价/（1+平台服务费率）"
+                      className="text-slate-500 font-medium"
+                    />
+                  </FormField>
+                  <FormField label="品牌类别" className="lg:col-span-2">
+                    <Input 
+                      value={brandCategory} 
+                      disabled 
+                      placeholder="品牌类别"
+                      className="text-slate-500 font-medium"
                     />
                   </FormField>
                 </div>
